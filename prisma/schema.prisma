@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  INVOICED
+  CANCELLED
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  REPRESENTATIVE
+  BACKOFFICE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(REPRESENTATIVE)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customers   Customer[]
+  orders      Order[]
+  priceTables PriceTable[]
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  companyName  String   // Razão Social
+  cnpj         String   @unique
+  address      String
+  city         String
+  state        String
+  segment      String?  // Canal/Segmento
+  abcClass     String?  @default("C")
+  phone        String?
+  email        String?
+  cep          String?
+  contactName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  representativeId String
+  representative   User   @relation(fields: [representativeId], references: [id])
+  orders           Order[]
+  priceTables      PriceTable[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  description String?
+  category    String
+  unit        String   @default("UN")
+  active      Boolean  @default(true)
+  basePrice   Float
+  volume      String?
+  unitsPerBox Int?     @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems      OrderItem[]
+  priceTableItems PriceTableItem[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber Int         @unique
+  status      OrderStatus @default(DRAFT)
+  totalAmount Float
+  discount    Float       @default(0)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  representativeId String
+  representative   User     @relation(fields: [representativeId], references: [id])
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  price     Float
+  total     Float
+
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+}
+model PriceTable {
+  id               String           @id @default(cuid())
+  name             String
+  description      String?
+  active           Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  
+  representativeId String
+  representative   User             @relation(fields: [representativeId], references: [id])
+  
+  customerId       String?
+  customer         Customer?        @relation(fields: [customerId], references: [id])
+  
+  items            PriceTableItem[]
+}
+
+model PriceTableItem {
+  id           String      @id @default(cuid())
+  salePrice    Float       // Preço de venda calculado
+  
+  priceTableId String
+  priceTable   PriceTable  @relation(fields: [priceTableId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product     @relation(fields: [productId], references: [id])
+}
