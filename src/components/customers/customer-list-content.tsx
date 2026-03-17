@@ -53,7 +53,7 @@ export function CustomerListContent({ initialCustomers }: { initialCustomers: an
     }
 
     const handleDelete = async () => {
-        if (!deletingProduct) return
+        if (!deletingCustomer) return
         setIsSaving(true)
         const res = await deleteCustomer(deletingCustomer.id)
         if (res.success) {

@@ -6,7 +6,6 @@ import { BottomNav, FAB } from "@/components/layout/mobile-nav";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export { inter };
 
 export const metadata: Metadata = {
   title: "Status Go | Gestão de Força de Vendas",
