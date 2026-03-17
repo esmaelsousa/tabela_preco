@@ -24,7 +24,7 @@ async function main() {
             id: 'static-admin-id',
             name: 'Esmael Admin',
             email: 'admin@admin.com',
-            password: 'admin123', // Em prod usar hash!
+            password: '123445', // Em prod usar hash!
             role: 'ADMIN',
         },
     })
