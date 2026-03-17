@@ -5,16 +5,8 @@ export const authConfig = {
         signIn: "/login",
     },
     callbacks: {
-        authorized({ auth, request: { nextUrl } }) {
-            const isLoggedIn = !!auth?.user
-            const isOnDashboard = !nextUrl.pathname.startsWith("/login")
-
-            if (isOnDashboard) {
-                if (isLoggedIn) return true
-                return false // Redireciona para login
-            } else if (isLoggedIn) {
-                return Response.redirect(new URL("/", nextUrl))
-            }
+        authorized({ auth }) {
+            // LOGIN DESABILITADO TEMPORARIAMENTE PARA ACESSO DIRETO
             return true
         },
     },
