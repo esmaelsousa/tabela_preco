@@ -5,6 +5,7 @@ import { authConfig } from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
+    secret: process.env.AUTH_SECRET || "fallback-secret-for-debug-only-123",
     providers: [
         Credentials({
             name: "Credentials",
