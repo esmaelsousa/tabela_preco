@@ -3,7 +3,8 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import Database from 'better-sqlite3'
 
-function initializeProductionDb(db: Database.Database): void {
+function initializeProductionDb(dbPath: string): void {
+  const db = new Database(dbPath)
   db.exec(`
     CREATE TABLE IF NOT EXISTS "User" (
       "id" TEXT NOT NULL PRIMARY KEY,
@@ -105,13 +106,14 @@ function initializeProductionDb(db: Database.Database): void {
     INSERT OR IGNORE INTO "User" ("id", "name", "email", "password", "role", "active", "createdAt", "updatedAt")
     VALUES ('static-admin-id', 'Admin', 'admin@sistema.com', 'admin123', 'ADMIN', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
   `)
+  db.close()
 }
 
 const prismaClientSingleton = () => {
   if (process.env.NODE_ENV === 'production') {
-    const db = new Database('/tmp/dev.db')
-    initializeProductionDb(db)
-    const adapter = new PrismaBetterSqlite3(db)
+    const dbPath = '/tmp/dev.db'
+    initializeProductionDb(dbPath)
+    const adapter = new PrismaBetterSqlite3({ url: dbPath })
     return new PrismaClient({ adapter })
   }
   const adapter = new PrismaBetterSqlite3({ url: 'prisma/dev.db' })
