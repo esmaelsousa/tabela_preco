@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Search, FileSpreadsheet, Send, Trash2, Pencil, FileText, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { formatCurrency } from "@/lib/commerce"
-import { deletePriceTable, getPriceTableById } from "@/lib/actions"
+import { deletePriceTable } from "@/lib/actions"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import * as XLSX from 'xlsx'
@@ -36,10 +36,10 @@ export function PriceTableList({ initialTables }: { initialTables: any[] }) {
     }
 
     const handleExportExcel = async (id: string) => {
-        const table = await getPriceTableById(id)
+        const table = tables.find((t: any) => t.id === id)
         if (!table) return
 
-        const data = table.items.map((item: any) => ({
+        const data = (table as any).items.map((item: any) => ({
             'Produto': item.product.name,
             'Categoria': item.product.category,
             'Volume': item.product.volume || '',
@@ -54,7 +54,7 @@ export function PriceTableList({ initialTables }: { initialTables: any[] }) {
     }
 
     const handleExportPDF = async (id: string) => {
-        const table = await getPriceTableById(id)
+        const table = tables.find((t: any) => t.id === id)
         if (!table) return
 
         const doc = new jsPDF()
@@ -93,10 +93,10 @@ export function PriceTableList({ initialTables }: { initialTables: any[] }) {
         doc.save(`${table.name.replace(/\s+/g, '_')}.pdf`)
     }
 
-    const handleWhatsAppSend = async (id: string) => {
+    const handleWhatsAppSend = (id: string) => {
         setSendingId(id)
         try {
-            const table = await getPriceTableById(id)
+            const table = tables.find((t: any) => t.id === id)
             if (!table) return
 
             // Agrupar itens por categoria
