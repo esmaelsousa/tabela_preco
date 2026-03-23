@@ -3,9 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import Database from 'better-sqlite3'
 
-function initializeProductionDb(dbPath: string): void {
-  const db = new Database(dbPath)
-  db.exec(`
+const SCHEMA_SQL = `
     CREATE TABLE IF NOT EXISTS "User" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "name" TEXT NOT NULL,
@@ -105,17 +103,57 @@ function initializeProductionDb(dbPath: string): void {
 
     INSERT OR IGNORE INTO "User" ("id", "name", "email", "password", "role", "active", "createdAt", "updatedAt")
     VALUES ('static-admin-id', 'Admin', 'admin@sistema.com', 'admin123', 'ADMIN', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-  `)
+`
+
+function initializeSqliteDb(dbPath: string): void {
+  const db = new Database(dbPath)
+  db.exec(SCHEMA_SQL)
   db.close()
 }
 
+export async function initializeDb(): Promise<void> {
+  const tursoUrl = process.env.TURSO_DATABASE_URL
+  if (!tursoUrl) return
+  const { createClient } = await import('@libsql/client')
+  const client = createClient({
+    url: tursoUrl,
+    authToken: process.env.TURSO_AUTH_TOKEN || '',
+  })
+  try {
+    await client.executeMultiple(SCHEMA_SQL)
+  } catch (err) {
+    console.error('[db] Turso schema init error:', err)
+  } finally {
+    client.close()
+  }
+}
+
 const prismaClientSingleton = () => {
+  const tursoUrl = process.env.TURSO_DATABASE_URL
+
+  if (tursoUrl) {
+    // Production: Turso persistent database
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PrismaLibSQL } = require('@prisma/adapter-libsql')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createClient } = require('@libsql/client')
+    const client = createClient({
+      url: tursoUrl,
+      authToken: process.env.TURSO_AUTH_TOKEN || '',
+    })
+    const adapter = new PrismaLibSQL(client)
+    return new PrismaClient({ adapter })
+  }
+
   if (process.env.NODE_ENV === 'production') {
+    // Fallback: ephemeral SQLite (sem persistência)
     const dbPath = '/tmp/dev.db'
-    initializeProductionDb(dbPath)
+    initializeSqliteDb(dbPath)
     const adapter = new PrismaBetterSqlite3({ url: dbPath })
     return new PrismaClient({ adapter })
   }
+
+  // Local development
   const adapter = new PrismaBetterSqlite3({ url: 'prisma/dev.db' })
   return new PrismaClient({ adapter })
 }
@@ -125,7 +163,5 @@ declare global {
 }
 
 const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
-
 export default prisma
-
 if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
