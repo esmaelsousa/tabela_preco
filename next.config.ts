@@ -1,7 +1,13 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-};
+  serverExternalPackages: [
+    '@libsql/client',
+    'libsql',
+    '@prisma/adapter-libsql',
+    'better-sqlite3',
+    '@prisma/adapter-better-sqlite3',
+  ],
+}
 
-export default nextConfig;
+export default nextConfig
