@@ -31,7 +31,7 @@ export async function getDashboardStats() {
             currentGoalProgress: (totalRevenue / 50000) * 100
         }
     } catch (error) {
-        console.error("Erro ao buscar estatísticas:", error)
+        console.error("Erro ao buscar estatÃ­sticas:", error)
         return null
     }
 }
@@ -148,7 +148,7 @@ export async function createCustomer(data: {
         return { success: true, customerId: customer.id }
     } catch (error) {
         console.error("Erro ao criar cliente:", error)
-        return { success: false, error: "Erro ao cadastrar cliente. Verifique se o CNPJ já existe." }
+        return { success: false, error: "Erro ao cadastrar cliente. Verifique se o CNPJ jÃ¡ existe." }
     }
 }
 
@@ -232,13 +232,18 @@ export async function getPriceTables() {
             orderBy: { createdAt: 'desc' },
             include: {
                 customer: true,
+                items: {
+                    include: {
+                        product: true
+                    }
+                },
                 _count: {
                     select: { items: true }
                 }
             }
         })
     } catch (error) {
-        console.error("Erro ao buscar tabelas de preços:", error)
+        console.error("Erro ao buscar tabelas de preÃ§os:", error)
         return []
     }
 }
@@ -268,7 +273,7 @@ export async function createPriceTable(data: {
         revalidatePath('/tabelas')
         return { success: true, tableId: table.id }
     } catch (error) {
-        console.error("Erro ao criar tabela de preços:", error)
+        console.error("Erro ao criar tabela de preÃ§os:", error)
         return { success: false, error: "Erro ao criar tabela" }
     }
 }
@@ -281,7 +286,7 @@ export async function deletePriceTable(id: string) {
         revalidatePath('/tabelas')
         return { success: true }
     } catch (error) {
-        console.error("Erro ao excluir tabela de preços:", error)
+        console.error("Erro ao excluir tabela de preÃ§os:", error)
         return { success: false, error: "Erro ao excluir tabela" }
     }
 }
@@ -294,7 +299,7 @@ export async function updatePriceTable(id: string, data: {
 }) {
     try {
         await prisma.$transaction([
-            // Atualizar dados básicos
+            // Atualizar dados bÃ¡sicos
             prisma.priceTable.update({
                 where: { id },
                 data: {
@@ -320,7 +325,7 @@ export async function updatePriceTable(id: string, data: {
         revalidatePath('/tabelas')
         return { success: true }
     } catch (error) {
-        console.error("Erro ao atualizar tabela de preços:", error)
+        console.error("Erro ao atualizar tabela de preÃ§os:", error)
         return { success: false, error: "Erro ao atualizar tabela" }
     }
 }
@@ -347,7 +352,7 @@ export async function getPriceTableById(id: string) {
 function getCategory(name: string) {
     const n = name.toUpperCase();
     if (n.includes('SHAMPOO')) return 'Shampoo';
-    if (n.includes('MÁSCARA') || n.includes('MASCARA')) return 'Máscara';
+    if (n.includes('MÃSCARA') || n.includes('MASCARA')) return 'MÃ¡scara';
     if (n.includes('CONDICIONADOR')) return 'Condicionador';
     if (n.includes('LEAVE-IN')) return 'Leave-in';
     if (n.includes('LOTE') || n.includes('COMBO')) return 'Combos';
@@ -357,7 +362,7 @@ function getCategory(name: string) {
 export async function syncProductsFromExcel(formData: FormData) {
     try {
         const file = formData.get('file') as File
-        if (!file) return { success: false, error: "Arquivo não encontrado" }
+        if (!file) return { success: false, error: "Arquivo nÃ£o encontrado" }
 
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
@@ -374,7 +379,7 @@ export async function syncProductsFromExcel(formData: FormData) {
         for (const row of productRows) {
             const sku = row[0]?.toString().trim()
             const name = row[1]?.toString().trim()
-            const costPrice = parseFloat(row[3]) // VALOR UNITÁRIO
+            const costPrice = parseFloat(row[3]) // VALOR UNITÃRIO
             const unitsPerBox = parseInt(row[20]) // UNID/ CAIXA
 
             if (!sku || !name || isNaN(costPrice)) continue
